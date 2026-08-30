@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>興嘉國小班級聊書時光</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    /* * 色彩計畫 (擷取自興嘉國小水彩畫與學童插畫)
+     * Primary: 湖水綠 (取自校舍)
+     * Secondary: 晴空藍 (取自天空與制服)
+     * Accent: 暖橘黃 (取自活力配件)
+     */
+    :root {
+      --primary-color: #3AA39F; 
+      --secondary-color: #4facfe;
+      --accent-color: #FFB74D;
+      --bg-color: #F4F9F9;
+      --text-main: #2C3E50;
+    }
+
+    body { 
+      font-family: 'Noto Sans TC', sans-serif; 
+      background-color: var(--bg-color); 
+      color: var(--text-main);
+    }
+
+    /* 頂部英雄區塊 - 湖水綠到晴空藍的漸層 */
+    .hero-section {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      color: white; 
+      padding: 50px 0; 
+      margin-bottom: 40px;
+      border-radius: 0 0 30px 30px; 
+      box-shadow: 0 10px 25px rgba(58, 163, 159, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* 增加一點背景圖騰感 (圓圈裝飾) */
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: -50px; right: -50px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+    }
+    .hero-section::after {
+      content: '';
+      position: absolute;
+      bottom: -30px; left: 10%;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* 數字統計卡片 - 玻璃擬物風格 */
+    .stat-card {
+      background: rgba(255, 255, 255, 0.25); 
+      border-radius: 20px;
+      padding: 15px; 
+      backdrop-filter: blur(10px); 
+      border: 1px solid rgba(255,255,255,0.4);
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .stat-number { 
+      font-size: 3rem; 
+      font-weight: 800; 
+      font-family: 'Nunito', sans-serif;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* 標籤導航美化 */
+    .nav-pills .nav-link { 
+      color: var(--primary-color); 
+      font-weight: 700; 
+      border-radius: 25px;
+      padding: 10px 25px;
+      margin: 0 5px;
+      transition: all 0.3s ease;
+    }
+    .nav-pills .nav-link.active { 
+      background-color: var(--primary-color); 
+      box-shadow: 0 4px 10px rgba(58, 163, 159, 0.3);
+    }
+    .nav-pills .nav-link:hover:not(.active) {
+      background-color: rgba(58, 163, 159, 0.1);
+    }
+
+    /* 卡片設計 - 更圓潤、陰影更柔和 */
+    .card {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.04);
+    }
+    .result-card {
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .result-card:hover { 
+      transform: translateY(-8px); 
+      box-shadow: 0 15px 30px rgba(58, 163, 159, 0.15); 
+    }
+    .card-img-top { 
+      height: 220px; 
+      object-fit: cover; 
+      border-radius: 20px 20px 0 0;
+    }
+    
+    /* 按鈕與徽章美化 */
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      border-radius: 25px;
+      font-weight: bold;
+    }
+    .btn-primary:hover {
+      background-color: #2F8A86;
+      border-color: #2F8A86;
+    }
+    .badge.bg-light.text-dark {
+      background-color: #E8F5F5 !important;
+      color: var(--primary-color) !important;
+      border: 1px solid rgba(58,163,159,0.2);
+    }
+    
+    .text-primary { color: var(--primary-color) !important; }
+    .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .admin-section { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.04); }
+    .badge-method { cursor: pointer; margin-right: 8px; margin-bottom: 8px; display: inline-block; padding: 10px 15px; font-size: 0.9em; border-radius: 15px;}
+    .badge-method:hover { opacity: 0.8; transform: scale(1.05); transition: 0.2s;}
+    
+    .chart-container { position: relative; height: 160px; width: 100%; }
+    
+    /* 載入動畫 */
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.9); z-index: 9999;
+      display: none; justify-content: center; align-items: center;
+    }
+    .spinner-border { color: var(--primary-color) !important; }
+
+    /* 確保 Logo 在黑色背景下有好的對比，加入一點外發光效果 (選用) */
+    .school-logo {
+      height: 55px; 
+      margin-right: 15px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner-border" role="status" style="width: 3rem; height: 3rem;"></div>
+  </div>
+
+  <div class="hero-section">
+    <div class="container position-relative" style="z-index: 1;">
+      <div class="row align-items-center">
+        <!-- 標題區塊 -->
+        <div class="col-lg-5 mb-4 mb-lg-0 text-center text-lg-start">
+          <div class="d-flex align-items-center justify-content-center justify-content-lg-start mb-2">
+            <!-- 替換為上傳的校徽 logo，請將 1000052737.png 一併上傳到 GitHub -->
+            <img src="1000052737.png" alt="興嘉國小" class="school-logo" onerror="this.src='https://placehold.co/55x55/3AA39F/FFFFFF?text=Logo'">
+            <h1 class="display-5 fw-bold mb-0">興嘉國小班級聊書時光</h1>
+          </div>
+          <!-- 修正英文校名拼音 -->
+          <p class="lead mb-0 opacity-75" style="font-family: 'Nunito', sans-serif; padding-left: 70px;">Sing Chia Elementary School Reading Time</p>
+        </div>
+        
+        <!-- 統計區塊 (圓餅圖) -->
+        <div class="col-lg-7">
+          <div class="row g-3">
+            <div class="col-md-4 col-6">
+              <div class="stat-card h-100 d-flex flex-column justify-content-center">
+                <div class="mb-1 fw-bold">參與班級數</div>
+                <div class="stat-number" id="classCount">0</div>
+              </div>
+            </div>
+            <div class="col-md-8 col-12">
+              <div class="stat-card h-100 d-flex flex-column justify-content-center">
+                <div class="chart-container">
+                  <canvas id="gradePieChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container pb-5">
+    <ul class="nav nav-pills mb-4 justify-content-center" id="pills-tab" role="tablist">
+      <li class="nav-item">
+        <button class="nav-link active" id="pills-upload-tab" data-bs-toggle="pill" data-bs-target="#pills-upload">
+          <i class="bi bi-cloud-upload-fill me-1"></i> 導師上傳區
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" id="pills-gallery-tab" data-bs-toggle="pill" data-bs-target="#pills-gallery">
+          <i class="bi bi-images me-1"></i> 成果觀摩牆
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" id="pills-admin-tab" data-bs-toggle="pill" data-bs-target="#pills-admin">
+          <i class="bi bi-gear-fill me-1"></i> 管理員專區
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="pills-tabContent">
+      <!-- 上傳區 -->
+      <div class="tab-pane fade show active" id="pills-upload">
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+              <div class="card-body p-4 p-md-5">
+                <h4 class="card-title mb-4 text-center text-primary fw-bold">填寫聊書成果</h4>
+                <form id="uploadForm">
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold">班級 <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-lg" id="className" placeholder="例：701 或 六年一班" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold">實施日期 <span class="text-danger">*</span></label>
+                      <input type="date" class="form-control form-control-lg" id="date" required>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">實施方式 <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-lg" id="method" required>
+                      <option value="" disabled selected>載入中...</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">閱讀書目 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-lg" id="bookTitle" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">聊書內容簡述 <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="content" rows="4" required></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">成果照片 <span class="text-danger">*</span> <small class="text-muted fw-normal">(5MB以內)</small></label>
+                    <input class="form-control form-control-lg" type="file" id="photoFile" accept="image/*" required>
+                  </div>
+                  <div class="mb-4">
+                    <label class="form-label fw-bold">學習單 <small class="text-muted fw-normal">(選填)</small></label>
+                    <input class="form-control form-control-lg" type="file" id="worksheetFile" accept=".pdf,image/*">
+                  </div>
+                  <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill py-3">確認送出成果</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 成果牆區 -->
+      <div class="tab-pane fade" id="pills-gallery">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="galleryContainer"></div>
+      </div>
+
+      <!-- 管理員專區 -->
+      <div class="tab-pane fade" id="pills-admin">
+        <div id="adminLoginScreen" class="row justify-content-center mt-5">
+          <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+              <div class="card-body text-center p-5">
+                <div class="mb-4 text-primary">
+                  <i class="bi bi-shield-lock-fill" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="mb-4 fw-bold">管理員登入</h4>
+                <input type="password" id="adminPassword" class="form-control form-control-lg mb-4 text-center" placeholder="請輸入密碼">
+                <button class="btn btn-primary btn-lg w-100 rounded-pill" onclick="performLogin()">登入系統</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="adminPanel" style="display:none;">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-speedometer2 me-2"></i>後台管理系統</h4>
+            <button class="btn btn-outline-secondary rounded-pill px-4" onclick="logout()">登出</button>
+          </div>
+
+          <div class="admin-section">
+            <h5 class="border-bottom pb-3 mb-4 fw-bold"><i class="bi bi-tags-fill me-2 text-warning"></i>實施方式管理</h5>
+            <div class="input-group mb-4">
+              <input type="text" class="form-control form-control-lg" id="newMethodInput" placeholder="輸入新的實施方式名稱">
+              <button class="btn btn-primary px-4" type="button" onclick="handleAddMethod()"><i class="bi bi-plus-lg me-1"></i> 新增</button>
+            </div>
+            <div id="methodsListContainer"><span class="text-muted">載入中...</span></div>
+          </div>
+          
+          <div class="admin-section">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h5 class="mb-0 fw-bold"><i class="bi bi-table me-2 text-info"></i>上傳資料列表</h5>
+              <button class="btn btn-success rounded-pill px-3" onclick="exportToCSV()"><i class="bi bi-file-earmark-spreadsheet me-1"></i> 匯出 Excel</button>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle" id="adminTable">
+                <thead class="table-light">
+                  <tr>
+                    <th>班級</th><th>日期</th><th>方式</th><th>書目</th><th>內容預覽</th><th>操作</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 編輯 Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold text-primary">編輯資料</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <input type="hidden" id="editRowIndex">
+          <div class="mb-3"><label class="form-label fw-bold">班級</label><input type="text" class="form-control" id="editClass"></div>
+          <div class="mb-3"><label class="form-label fw-bold">實施日期</label><input type="date" class="form-control" id="editDate"></div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">實施方式</label>
+            <select class="form-select" id="editMethod"></select>
+          </div>
+          <div class="mb-3"><label class="form-label fw-bold">書目</label><input type="text" class="form-control" id="editBook"></div>
+          <div class="mb-3"><label class="form-label fw-bold">內容</label><textarea class="form-control" id="editContent" rows="4"></textarea></div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary rounded-pill px-4" onclick="submitEdit()">儲存變更</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    // ==========================================
+    // ⚠️ 請將下方的網址替換為您 Google Apps Script 部署後的「網頁應用程式 URL」
+    // ==========================================
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzqo0sjyOCxGfQY_V0glcBrGEychvfSs2VYFmZJZSsUq_yS6X6tzPKnB0iInODqdwOY/exec"; 
+    
+    // 全域變數
+    let adminDataCache = [];
+    let currentMethods = [];
+    let pieChartInstance = null; 
+
+    // --- 核心 API 請求函數 ---
+    async function apiCall(action, payload = null) {
+      if(!GAS_API_URL || GAS_API_URL.includes('YOUR-ID-HERE')) {
+        Swal.fire('設定錯誤', '請先在原始碼中設定 GAS_API_URL', 'error');
+        throw new Error('GAS API URL 未設定');
+      }
+
+      try {
+        let response;
+        if (payload) {
+          response = await fetch(GAS_API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: action, payload: payload }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+          });
+        } else {
+          response = await fetch(`${GAS_API_URL}?action=${action}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('API Error:', error);
+        Swal.fire('連線錯誤', '無法連接到伺服器', 'error');
+        throw error;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadGalleryData();
+      loadMethods();
+    });
+
+    document.getElementById('pills-gallery-tab').addEventListener('click', loadGalleryData);
+
+    // 1. 載入實施方式
+    async function loadMethods() {
+      try {
+        const methods = await apiCall('getMethodList');
+        currentMethods = methods;
+        updateMethodDropdowns(methods);
+        renderAdminMethodsList(methods);
+      } catch(e) {}
+    }
+
+    function updateMethodDropdowns(methods) {
+      ['method', 'editMethod'].forEach(id => {
+        const el = document.getElementById(id);
+        if(!el) return;
+        const currentVal = el.value;
+        let html = '<option value="" disabled selected>請選擇...</option>';
+        methods.forEach(m => html += `<option value="${m}">${m}</option>`);
+        el.innerHTML = html;
+        if(currentVal) el.value = currentVal;
+      });
+    }
+
+    function renderAdminMethodsList(methods) {
+      const container = document.getElementById('methodsListContainer');
+      if(!container) return;
+      let html = '';
+      methods.forEach(m => {
+        html += `<span class="badge bg-light text-dark border badge-method">${m} <i class="bi bi-x-circle-fill text-danger ms-2" onclick="handleDeleteMethod('${m}')"></i></span>`;
+      });
+      container.innerHTML = html || '<span class="text-muted">尚無資料</span>';
+    }
+
+    async function handleAddMethod() {
+      const input = document.getElementById('newMethodInput');
+      const val = input.value.trim();
+      if(!val) return;
+
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      const res = await apiCall('addMethod', { methodName: val });
+      document.getElementById('loadingOverlay').style.display = 'none';
+      
+      if(res.status === 'success') {
+        input.value = '';
+        loadMethods();
+        Swal.fire({ icon: 'success', title: '新增成功', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+      } else {
+        Swal.fire('錯誤', res.message, 'error');
+      }
+    }
+
+    function handleDeleteMethod(name) {
+      Swal.fire({
+        title: `刪除 "${name}"?`,
+        text: "已使用的舊資料不會被修改，但未來無法再選擇。",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '刪除',
+        confirmButtonColor: '#dc3545'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          document.getElementById('loadingOverlay').style.display = 'flex';
+          const res = await apiCall('deleteMethod', { methodName: name });
+          document.getElementById('loadingOverlay').style.display = 'none';
+          
+          if(res.status === 'success') {
+            loadMethods();
+            Swal.fire({ icon: 'success', title: '刪除成功', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+          } else {
+            Swal.fire('錯誤', res.message, 'error');
+          }
+        }
+      });
+    }
+
+    // --- 繪製圓餅圖 (使用更繽紛活潑的色彩) ---
+    function renderPieChart(records) {
+      const uniqueClasses = new Set();
+      if (records) {
+        records.forEach(item => uniqueClasses.add(item.className.trim()));
+      }
+
+      const gradeCounts = {
+        '一年級': 0, '二年級': 0, '三年級': 0,
+        '四年級': 0, '五年級': 0, '六年級': 0, '其他': 0
+      };
+
+      uniqueClasses.forEach(cls => {
+        let grade = '其他';
+        const numMatch = cls.match(/^([1-6])/); 
+        
+        if (numMatch && cls.length >= 3) {
+          grade = ['一','二','三','四','五','六'][parseInt(numMatch[1])-1] + '年級';
+        } else if (cls.includes('一')) { grade = '一年級'; }
+        else if (cls.includes('二')) { grade = '二年級'; }
+        else if (cls.includes('三')) { grade = '三年級'; }
+        else if (cls.includes('四')) { grade = '四年級'; }
+        else if (cls.includes('五')) { grade = '五年級'; }
+        else if (cls.includes('六')) { grade = '六年級'; }
+
+        gradeCounts[grade]++;
+      });
+
+      const chartLabels = [];
+      const chartData = [];
+      Object.keys(gradeCounts).forEach(key => {
+        if (gradeCounts[key] > 0) {
+          chartLabels.push(key);
+          chartData.push(gradeCounts[key]);
+        }
+      });
+
+      const ctx = document.getElementById('gradePieChart').getContext('2d');
+      if (pieChartInstance) { pieChartInstance.destroy(); }
+
+      if (chartData.length > 0) {
+        pieChartInstance = new Chart(ctx, {
+          type: 'doughnut', 
+          data: {
+            labels: chartLabels,
+            datasets: [{
+              data: chartData,
+              backgroundColor: ['#4facfe', '#FFB74D', '#FF8A65', '#4DD0E1', '#81C784', '#BA68C8', '#F06292'],
+              borderWidth: 2,
+              borderColor: 'rgba(255,255,255,0.8)',
+              hoverOffset: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%', 
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: { color: '#ffffff', font: { family: 'Noto Sans TC', weight: 'bold' } }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(255,255,255,0.9)',
+                titleColor: '#3AA39F',
+                bodyColor: '#2C3E50',
+                borderColor: '#3AA39F',
+                borderWidth: 1,
+                callbacks: {
+                  label: function(context) { return ` ${context.label}: ${context.raw} 個班級`; }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // 2. 成果牆功能
+    async function loadGalleryData() {
+      const data = await apiCall('getGalleryData');
+      document.getElementById('classCount').innerText = data.count || 0;
+      
+      renderPieChart(data.records);
+
+      const container = document.getElementById('galleryContainer');
+      
+      if (!data.records || data.records.length === 0) {
+        container.innerHTML = `
+          <div class="col w-100 text-center py-5">
+            <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+            <p class="text-muted mt-3">目前還沒有成果上傳，快來當第一個吧！</p>
+          </div>`;
+        return;
+      }
+      
+      let html = '';
+      data.records.forEach(item => {
+        let dateStr = item.date;
+        try { dateStr = new Date(item.date).toLocaleDateString('zh-TW'); } catch(e){}
+        
+        const hasValidPhoto = item.photoUrl && item.photoUrl.startsWith('http');
+        const hasValidOriginal = item.originalPhotoUrl && item.originalPhotoUrl.startsWith('http');
+        const hasValidWorksheet = item.worksheetUrl && item.worksheetUrl.startsWith('http');
+
+        const worksheetBtn = hasValidWorksheet ? `<a href="${item.worksheetUrl}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3"><i class="bi bi-file-earmark-text"></i> 學習單</a>` : '';
+        const imgBtn = hasValidOriginal ? `<a href="${item.originalPhotoUrl}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3 ms-1"><i class="bi bi-arrows-fullscreen"></i> 大圖</a>` : '<span class="text-danger small ms-1"><i class="bi bi-exclamation-circle"></i> 圖片無效</span>';
+        const imgSrc = hasValidPhoto ? item.photoUrl : 'https://placehold.co/600x400/E8F5F5/3AA39F?text=圖片無法顯示';
+
+        html += `
+          <div class="col">
+            <div class="card h-100 result-card">
+              <img src="${imgSrc}" class="card-img-top" loading="lazy" onerror="this.src='https://placehold.co/600x400/E8F5F5/3AA39F?text=圖片無法顯示'">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h4 class="fw-bold text-primary mb-0">${item.className}</h4>
+                  <span class="badge bg-light text-dark px-3 py-2 rounded-pill">${item.method}</span>
+                </div>
+                <h6 class="fw-bold"><i class="bi bi-book me-2 text-warning"></i>${item.bookTitle}</h6>
+                <p class="text-truncate-2 text-muted mt-2">${item.content}</p>
+                <div class="d-flex justify-content-between mt-4 align-items-center border-top pt-3">
+                  <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>${dateStr}</small>
+                  <div>${worksheetBtn}${imgBtn}</div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    // 3. 上傳功能
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const loading = document.getElementById('loadingOverlay');
+      loading.style.display = 'flex';
+      
+      const formData = {
+        className: document.getElementById('className').value,
+        date: document.getElementById('date').value,
+        method: document.getElementById('method').value,
+        bookTitle: document.getElementById('bookTitle').value,
+        content: document.getElementById('content').value
+      };
+
+      const photoFile = document.getElementById('photoFile').files[0];
+      if (photoFile) {
+        const r = await fileToDataURL(photoFile);
+        formData.photoData = r.data; formData.photoName = r.name;
+      }
+      
+      const wsFile = document.getElementById('worksheetFile').files[0];
+      if (wsFile) {
+        const r = await fileToDataURL(wsFile);
+        formData.worksheetData = r.data; formData.worksheetName = r.name;
+      }
+
+      const res = await apiCall('processForm', formData);
+      loading.style.display = 'none';
+      
+      if(res.status === 'success') {
+        Swal.fire({
+          icon: 'success', title: '上傳成功', text: res.message, confirmButtonColor: '#3AA39F'
+        }).then(() => {
+          document.getElementById('uploadForm').reset();
+          document.getElementById('pills-gallery-tab').click(); // 自動跳轉到觀摩牆
+          loadGalleryData(); 
+        });
+      } else {
+        Swal.fire('失敗', res.message, 'error');
+      }
+    });
+
+    function fileToDataURL(file) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => resolve({ data: e.target.result, name: file.name });
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // 4. 後台管理
+    async function performLogin() {
+      const pwd = document.getElementById('adminPassword').value;
+      const isValid = await apiCall('checkLogin', { password: pwd });
+      if (isValid.isValid) {
+        document.getElementById('adminLoginScreen').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadAdminData();
+        loadMethods();
+      } else {
+        Swal.fire('錯誤', '密碼不正確', 'error');
+      }
+    }
+
+    function logout() {
+      document.getElementById('adminPanel').style.display = 'none';
+      document.getElementById('adminLoginScreen').style.display = 'flex';
+      document.getElementById('adminPassword').value = '';
+    }
+
+    async function loadAdminData() {
+      const tbody = document.querySelector('#adminTable tbody');
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></td></tr>';
+      const data = await apiCall('getAdminData');
+      adminDataCache = data;
+      renderAdminTable(data);
+    }
+
+    function renderAdminTable(data) {
+      const tbody = document.querySelector('#adminTable tbody');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">無資料</td></tr>';
+        return;
+      }
+      
+      let html = '';
+      data.forEach(row => {
+        let dateValue = row.date;
+        try {
+           const d = new Date(row.date);
+           const year = d.getFullYear();
+           const month = String(d.getMonth() + 1).padStart(2, '0');
+           const day = String(d.getDate()).padStart(2, '0');
+           if(!isNaN(year)) dateValue = `${year}-${month}-${day}`;
+        } catch(e) {}
+
+        html += `
+          <tr>
+            <td class="fw-bold">${row.className}</td>
+            <td>${dateValue}</td>
+            <td><span class="badge bg-light text-dark">${row.method}</span></td>
+            <td>${row.bookTitle}</td>
+            <td title="${row.content}" class="text-truncate-2" style="max-width: 200px;">${row.content}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary rounded-circle me-1" onclick="openEditModal('${row.rowIndex}', '${row.className}', '${dateValue}', '${row.method}', '${row.bookTitle}', \`${row.content.replace(/`/g, '\\`')}\`)"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-sm btn-outline-danger rounded-circle" onclick="deleteItem(${row.rowIndex})"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+    function openEditModal(rowIndex, className, date, method, book, content) {
+      document.getElementById('editRowIndex').value = rowIndex;
+      document.getElementById('editClass').value = className;
+      document.getElementById('editDate').value = date;
+      document.getElementById('editMethod').value = method;
+      document.getElementById('editBook').value = book;
+      document.getElementById('editContent').value = content;
+      editModal.show();
+    }
+
+    async function submitEdit() {
+      const data = {
+        rowIndex: document.getElementById('editRowIndex').value,
+        className: document.getElementById('editClass').value,
+        date: document.getElementById('editDate').value,
+        method: document.getElementById('editMethod').value,
+        bookTitle: document.getElementById('editBook').value,
+        content: document.getElementById('editContent').value
+      };
+
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      editModal.hide();
+
+      const res = await apiCall('updateRecord', data);
+      document.getElementById('loadingOverlay').style.display = 'none';
+      if (res.status === 'success') {
+        Swal.fire({icon: 'success', title: '更新成功', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500});
+        loadAdminData(); loadGalleryData();
+      } else {
+        Swal.fire('錯誤', res.message, 'error');
+      }
+    }
+
+    function deleteItem(rowIndex) {
+      Swal.fire({
+        title: '確定刪除?',
+        text: "刪除後無法復原！",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        confirmButtonText: '是的，刪除它'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          document.getElementById('loadingOverlay').style.display = 'flex';
+          const res = await apiCall('deleteRecord', { rowIndex: rowIndex });
+          document.getElementById('loadingOverlay').style.display = 'none';
+          if (res.status === 'success') {
+            Swal.fire({icon: 'success', title: '已刪除', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500});
+            loadAdminData(); loadGalleryData();
+          } else {
+            Swal.fire('錯誤', res.message, 'error');
+          }
+        }
+      });
+    }
+
+    function exportToCSV() {
+      if (adminDataCache.length === 0) return Swal.fire('無資料', '目前沒有資料可匯出', 'info');
+      let csvContent = "\uFEFF班級,實施日期,實施方式,閱讀書目,聊書內容,照片連結,學習單連結\n";
+      adminDataCache.forEach(row => {
+        const cleanContent = `"${row.content.replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+        const cleanBook = `"${row.bookTitle.replace(/"/g, '""')}"`;
+        let dateStr = row.date;
+        try { dateStr = new Date(row.date).toLocaleDateString('zh-TW'); } catch(e){}
+        csvContent += `${row.className},${dateStr},${row.method},${cleanBook},${cleanContent},${row.photoUrl},${row.worksheetUrl}\n`;
+      });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
+      link.download = `聊書成果匯出_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    }
+  </script>
+</body>
+</html>
