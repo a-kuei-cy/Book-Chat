@@ -475,7 +475,11 @@
     function renderPieChart(records) {
       const uniqueClasses = new Set();
       if (records) {
-        records.forEach(item => uniqueClasses.add(item.className.trim()));
+        records.forEach(item => {
+          // 【修正】確保將班級名稱轉換為字串，避免輸入純數字造成的 .trim() 錯誤
+          const clsStr = String(item.className || '');
+          if (clsStr) uniqueClasses.add(clsStr.trim());
+        });
       }
 
       const gradeCounts = {
@@ -485,16 +489,17 @@
 
       uniqueClasses.forEach(cls => {
         let grade = '其他';
-        const numMatch = cls.match(/^([1-6])/); 
+        const clsString = String(cls);
+        const numMatch = clsString.match(/^([1-6])/); 
         
-        if (numMatch && cls.length >= 3) {
+        if (numMatch && clsString.length >= 3) {
           grade = ['一','二','三','四','五','六'][parseInt(numMatch[1])-1] + '年級';
-        } else if (cls.includes('一')) { grade = '一年級'; }
-        else if (cls.includes('二')) { grade = '二年級'; }
-        else if (cls.includes('三')) { grade = '三年級'; }
-        else if (cls.includes('四')) { grade = '四年級'; }
-        else if (cls.includes('五')) { grade = '五年級'; }
-        else if (cls.includes('六')) { grade = '六年級'; }
+        } else if (clsString.includes('一')) { grade = '一年級'; }
+        else if (clsString.includes('二')) { grade = '二年級'; }
+        else if (clsString.includes('三')) { grade = '三年級'; }
+        else if (clsString.includes('四')) { grade = '四年級'; }
+        else if (clsString.includes('五')) { grade = '五年級'; }
+        else if (clsString.includes('六')) { grade = '六年級'; }
 
         gradeCounts[grade]++;
       });
