@@ -147,7 +147,7 @@
 
     /* 確保 Logo 在黑色背景下有好的對比，加入一點外發光效果 (選用) */
     .school-logo {
-      height: 85px; 
+      height: 55px; 
       margin-right: 15px;
       border-radius: 8px;
     }
@@ -165,7 +165,7 @@
         <!-- 標題區塊 -->
         <div class="col-lg-5 mb-4 mb-lg-0 text-center text-lg-start">
           <div class="d-flex align-items-center justify-content-center justify-content-lg-start mb-2">
-            <!-- 替換為上傳的校徽 logo，請將 1000052737.png 一併上傳到 GitHub -->
+            <!-- 替換為上傳的校徽 logo -->
             <img src="1000052737.png" alt="興嘉國小" class="school-logo" onerror="this.src='https://placehold.co/55x55/3AA39F/FFFFFF?text=Logo'">
             <h1 class="display-5 fw-bold mb-0">興嘉國小班級聊書時光</h1>
           </div>
@@ -355,7 +355,7 @@
 
   <script>
     // ==========================================
-    // ⚠️ 請將下方的網址替換為您 Google Apps Script 部署後的「網頁應用程式 URL」
+    // 已經替換為您的專屬 Google Apps Script 網址
     // ==========================================
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzqo0sjyOCxGfQY_V0glcBrGEychvfSs2VYFmZJZSsUq_yS6X6tzPKnB0iInODqdwOY/exec"; 
     
@@ -572,27 +572,28 @@
         let dateStr = item.date;
         try { dateStr = new Date(item.date).toLocaleDateString('zh-TW'); } catch(e){}
         
-        const hasValidPhoto = item.photoUrl && item.photoUrl.startsWith('http');
-        const hasValidOriginal = item.originalPhotoUrl && item.originalPhotoUrl.startsWith('http');
-        const hasValidWorksheet = item.worksheetUrl && item.worksheetUrl.startsWith('http');
+        // 更嚴謹地處理可能的空資料與無效圖片
+        const hasValidPhoto = item.photoUrl && typeof item.photoUrl === 'string' && item.photoUrl.startsWith('http');
+        const hasValidOriginal = item.originalPhotoUrl && typeof item.originalPhotoUrl === 'string' && item.originalPhotoUrl.startsWith('http');
+        const hasValidWorksheet = item.worksheetUrl && typeof item.worksheetUrl === 'string' && item.worksheetUrl.startsWith('http');
 
         const worksheetBtn = hasValidWorksheet ? `<a href="${item.worksheetUrl}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3"><i class="bi bi-file-earmark-text"></i> 學習單</a>` : '';
         const imgBtn = hasValidOriginal ? `<a href="${item.originalPhotoUrl}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3 ms-1"><i class="bi bi-arrows-fullscreen"></i> 大圖</a>` : '<span class="text-danger small ms-1"><i class="bi bi-exclamation-circle"></i> 圖片無效</span>';
-        const imgSrc = hasValidPhoto ? item.photoUrl : 'https://placehold.co/600x400/E8F5F5/3AA39F?text=圖片無法顯示';
+        const imgSrc = hasValidPhoto ? item.photoUrl : 'https://placehold.co/600x400/E8F5F5/3AA39F?text=無提供圖片';
 
         html += `
           <div class="col">
             <div class="card h-100 result-card">
-              <img src="${imgSrc}" class="card-img-top" loading="lazy" onerror="this.src='https://placehold.co/600x400/E8F5F5/3AA39F?text=圖片無法顯示'">
+              <img src="${imgSrc}" class="card-img-top" loading="lazy" onerror="this.src='https://placehold.co/600x400/E8F5F5/3AA39F?text=無法載入圖片'">
               <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h4 class="fw-bold text-primary mb-0">${item.className}</h4>
-                  <span class="badge bg-light text-dark px-3 py-2 rounded-pill">${item.method}</span>
+                  <h4 class="fw-bold text-primary mb-0">${item.className || '無班級'}</h4>
+                  <span class="badge bg-light text-dark px-3 py-2 rounded-pill">${item.method || '未分類'}</span>
                 </div>
-                <h6 class="fw-bold"><i class="bi bi-book me-2 text-warning"></i>${item.bookTitle}</h6>
-                <p class="text-truncate-2 text-muted mt-2">${item.content}</p>
+                <h6 class="fw-bold"><i class="bi bi-book me-2 text-warning"></i>${item.bookTitle || '無書名'}</h6>
+                <p class="text-truncate-2 text-muted mt-2">${item.content || ''}</p>
                 <div class="d-flex justify-content-between mt-4 align-items-center border-top pt-3">
-                  <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>${dateStr}</small>
+                  <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>${dateStr || ''}</small>
                   <div>${worksheetBtn}${imgBtn}</div>
                 </div>
               </div>
